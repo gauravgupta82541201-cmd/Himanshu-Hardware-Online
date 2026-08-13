@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin | Himanshu Hardware</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="admin-page">
+
+<header class="adminbar">
+
+  <a class="brand" href="index.html">
+    <b>HH</b>
+    <span>
+      Himanshu Hardware
+      <small>Online Admin</small>
+    </span>
+  </a>
+
+  <a class="btn light" href="index.html">
+    Customer Website
+  </a>
+
+</header>
+
+
+<main class="adminwrap">
+
+  <!-- ================= LOGIN ================= -->
+
+  <section id="loginBox" class="login">
+
+    <small>SECURE ADMIN</small>
+
+    <h1>Admin Login</h1>
+
+    <p>Online database ko manage karein.</p>
+
+    <input
+      id="email"
+      type="email"
+      placeholder="Admin email"
+      autocomplete="username"
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+
+    <button
+      type="button"
+      class="btn primary full"
+      id="login">
+      Login
+    </button>
+
+  </section>
+
+
+  <!-- ================= DASHBOARD ================= -->
+
+  <section id="dashboard" class="dashboard hidden">
+
+    <div class="head">
+
+      <div>
+        <small>CONTROL CENTER</small>
+        <h1>Admin Dashboard</h1>
+      </div>
+
+      <button
+        type="button"
+        class="btn outline"
+        id="logout">
+        Logout
+      </button>
+
+    </div>
+
+
+    <!-- ================= TABS ================= -->
+
+    <div class="tabs">
+
+      <button
+        type="button"
+        class="tab active"
+        data-tab="inventory">
+        📦 Products
+      </button>
+
+      <button
+        type="button"
+        class="tab"
+        data-tab="shop">
+        🏪 Shop & Social
+      </button>
+
+    </div>
+
+
+    <!-- ================= QUICK ACTIONS ================= -->
+    <div class="quick-actions">
+      <div class="quick-actions-title">
+        <div>
+          <small>FAST CONTROL</small>
+          <h2>Quick Actions</h2>
+        </div>
+      </div>
+
+      <div class="quick-actions-grid">
+        <button type="button" class="quick-action" data-action="add-product">
+          <span>➕</span>
+          <b>Add Product</b>
+          <small>New item add karein</small>
+        </button>
+
+        <button type="button" class="quick-action" data-action="inventory">
+          <span>📦</span>
+          <b>Inventory</b>
+          <small>All products dekhein</small>
+        </button>
+
+        <button type="button" class="quick-action" data-action="low-stock">
+          <span>⚠️</span>
+          <b>Low Stock</b>
+          <small>Kam stock wale items</small>
+        </button>
+
+        <button type="button" class="quick-action" data-action="out-stock">
+          <span>🔴</span>
+          <b>Out of Stock</b>
+          <small>Unavailable items</small>
+        </button>
+
+        <button type="button" class="quick-action" data-action="shop">
+          <span>🏪</span>
+          <b>Shop & Social</b>
+          <small>Shop settings manage karein</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= INVENTORY ================= -->
+
+    <div
+      id="inventory"
+      class="panel">
+
+      <!-- NEXT LEVEL INVENTORY OVERVIEW -->
+      <div class="admin-overview">
+
+        <div class="admin-stat">
+          <span>📦</span>
+          <div>
+            <small>TOTAL PRODUCTS</small>
+            <strong id="statTotal">0</strong>
+          </div>
+        </div>
+
+        <div class="admin-stat">
+          <span>✅</span>
+          <div>
+            <small>AVAILABLE</small>
+            <strong id="statAvailable">0</strong>
+          </div>
+        </div>
+
+        <div class="admin-stat">
+          <span>⚠️</span>
+          <div>
+            <small>LOW STOCK</small>
+            <strong id="statLowStock">0</strong>
+          </div>
+        </div>
+
+        <div class="admin-stat">
+          <span>❌</span>
+          <div>
+            <small>OUT OF STOCK</small>
+            <strong id="statOut">0</strong>
+          </div>
+        </div>
+
+      </div>
+
+      
+<!-- ===== INVENTORY ANALYTICS ===== -->
+<div class="inventory-analytics">
+
+  <div class="analytics-card">
+    <span>💰</span>
+    <div>
+      <small>INVENTORY VALUE</small>
+      <strong id="analyticsTotalValue">₹0</strong>
+    </div>
+  </div>
+
+  <div class="analytics-card">
+    <span>📦</span>
+    <div>
+      <small>TOTAL STOCK UNITS</small>
+      <strong id="analyticsStockUnits">0</strong>
+    </div>
+  </div>
+
+  <div class="analytics-card">
+    <span>🛒</span>
+    <div>
+      <small>AVG PRODUCT PRICE</small>
+      <strong id="analyticsAvgPrice">₹0</strong>
+    </div>
+  </div>
+
+  <div class="analytics-card">
+    <span>📈</span>
+    <div>
+      <small>STOCKED PRODUCTS</small>
+      <strong id="analyticsStockedProducts">0</strong>
+    </div>
+  </div>
+
+</div>
+
+<!-- INVENTORY SEARCH & FILTER -->
+      <div class="inventory-tools">
+
+        <div class="inventory-search">
+          <span>🔎</span>
+          <input
+            id="productSearch"
+            type="search"
+            placeholder="Product search karein..."
+          >
+        </div>
+
+        <select id="productFilter">
+          <option value="all">All Products</option>
+          <option value="available">Available</option>
+          <option value="low">Low Stock</option>
+          <option value="out">Out of Stock</option>
+          <option value="featured">⭐ Featured</option>
+          <option value="offer">🔥 Offers</option>
+        </select>
+
+      </div>
+
+      <div class="head">
+
+        <div>
+          <h2>Live Inventory</h2>
+          <small>Public website par automatically show hoga.</small>
+        </div>
+
+        <button
+          type="button"
+          class="btn primary"
+          id="add">
+          ＋ Add Product
+        </button>
+
+      </div>
+
+      <div class="inventory-tools">
+
+        <div class="inventory-stats">
+          <div class="inventory-stat">
+            <span>📦 Total Products</span>
+            <b id="statTotal">0</b>
+          </div>
+
+          <div class="inventory-stat">
+            <span>✅ Available</span>
+            <b id="statAvailable">0</b>
+          </div>
+
+          <div class="inventory-stat">
+            <span>⚠️ Low Stock</span>
+            <b id="statLowStock">0</b>
+          </div>
+
+          <div class="inventory-stat">
+            <span>❌ Unavailable</span>
+            <b id="statUnavailable">0</b>
+          </div>
+        </div>
+
+        <div class="inventory-filters">
+
+          <input
+            id="inventorySearch"
+            type="search"
+            placeholder="🔎 Product search karein..."
+          >
+
+          <select id="inventoryCategory">
+            <option value="">All Categories</option>
+          </select>
+
+          <select id="inventoryAvailability">
+            <option value="">All Status</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+            <option value="low">Low Stock</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <div id="adminProducts"></div>
+
+    </div>
+
+
+    <!-- ================= SHOP & SOCIAL ================= -->
+
+    <div
+      id="shop"
+      class="panel hidden">
+
+      <div class="head">
+
+        <div>
+          <small>PUBLIC WEBSITE</small>
+          <h2>Shop & Social Settings</h2>
+        </div>
+
+      </div>
+
+
+      <form
+        id="shopForm"
+        class="form">
+
+
+        <!-- BASIC SHOP -->
+
+        <h3 class="wide">🏪 Shop Information</h3>
+
+        <label>
+          Shop Name
+          <input
+            name="name"
+            type="text"
+            placeholder="Himanshu Hardware">
+        </label>
+
+
+        <label>
+          Phone
+          <input
+            name="phone"
+            type="tel"
+            placeholder="6200908356">
+        </label>
+
+
+        <label>
+          WhatsApp
+          <input
+            name="whatsapp"
+            type="tel"
+            placeholder="6200908356">
+        </label>
+
+
+        <label>
+          Google Rating
+          <input
+            name="google_rating"
+            type="text"
+            placeholder="4.0">
+        </label>
+
+
+        <label>
+          Opening Time
+          <input
+            name="open_time"
+            type="text"
+            placeholder="7:00 AM">
+        </label>
+
+
+        <label>
+          Closing Time
+          <input
+            name="close_time"
+            type="text"
+            placeholder="9:00 PM">
+        </label>
+
+
+        <label class="wide">
+          Address
+          <textarea
+            name="address"
+            placeholder="Shop address"></textarea>
+        </label>
+
+
+        <label class="wide">
+          Google Maps URL
+          <input
+            name="maps_url"
+            type="url"
+            placeholder="https://maps.google.com/...">
+        </label>
+
+
+        
+        <h3 class="wide">🏪 Shop Status</h3>
+
+        <label>
+          Shop Status
+          <select name="shop_status">
+            <option value="open">🟢 Open</option>
+            <option value="closed">🔴 Closed</option>
+            <option value="temporary">🟡 Temporarily Closed</option>
+          </select>
+        </label>
+
+        <label>
+          Shop Tagline
+          <input
+            name="tagline"
+            type="text"
+            placeholder="Quality Hardware • Trusted Service">
+        </label>
+
+<!-- BRANDING -->
+
+        <h3 class="wide">🎨 Branding</h3>
+
+
+        <label>
+          Logo Image URL
+          <input
+            name="logo_url"
+            type="url"
+            placeholder="https://...">
+        </label>
+
+
+        <label>
+          Cover Image URL
+          <input
+            name="cover_url"
+            type="url"
+            placeholder="https://...">
+        </label>
+
+
+        <!-- SOCIAL -->
+
+        <h3 class="wide">🔗 Social Media & Website</h3>
+
+
+        <label>
+          Instagram URL
+          <input
+            name="instagram_url"
+            type="url"
+            placeholder="https://instagram.com/...">
+        </label>
+
+
+        <label>
+          Facebook URL
+          <input
+            name="facebook_url"
+            type="url"
+            placeholder="https://facebook.com/...">
+        </label>
+
+
+        <label>
+          YouTube URL
+          <input
+            name="youtube_url"
+            type="url"
+            placeholder="https://youtube.com/...">
+        </label>
+
+
+        <label>
+          Other Website URL
+          <input
+            name="website_url"
+            type="url"
+            placeholder="https://...">
+        </label>
+
+
+        <!-- DESCRIPTION -->
+
+        <h3 class="wide">📝 Shop Description</h3>
+
+
+        <label class="wide">
+          Description
+          <textarea
+            name="description"
+            placeholder="Hardware, construction items, paint accessories..."></textarea>
+        </label>
+
+
+        <!-- SAVE -->
+
+        <div class="wide save-area">
+
+          <button
+            type="submit"
+            class="btn primary"
+            id="saveShop">
+            💾 Save Shop Settings Online
+          </button>
+
+        </div>
+
+        <!-- ================= LIVE SHOP PREVIEW ================= -->
+
+        <div class="wide live-preview-wrap">
+
+          <div class="live-preview-head">
+            <div>
+              <small>LIVE PREVIEW</small>
+              <h3>👀 Customer Website Preview</h3>
+            </div>
+            <span class="preview-live-dot">● LIVE</span>
+          </div>
+
+          <div id="shopLivePreview" class="shop-live-preview">
+
+            <div class="preview-cover"></div>
+
+            <div class="preview-content">
+
+              <div class="preview-logo" id="previewLogo">
+                HH
+              </div>
+
+              <div class="preview-main">
+
+                <div class="preview-title-row">
+                  <div>
+                    <h2 id="previewName">Himanshu Hardware</h2>
+                    <p id="previewTagline">
+                      Quality Hardware • Trusted Service
+                    </p>
+                  </div>
+
+                  <span id="previewStatus" class="preview-status open">
+                    🟢 Open
+                  </span>
+                </div>
+
+                <div class="preview-info">
+
+                  <span id="previewPhone">
+                    📞 Phone not set
+                  </span>
+
+                  <span id="previewWhatsApp">
+                    💬 WhatsApp not set
+                  </span>
+
+                  <span id="previewHours">
+                    🕐 7:00 AM – 9:00 PM
+                  </span>
+
+                </div>
+
+                <p id="previewAddress" class="preview-address">
+                  📍 Shop address not set
+                </p>
+
+                <div id="previewSocial" class="preview-social">
+                  <span>🔗 Social links</span>
+                </div>
+
+                <p id="previewDescription" class="preview-description">
+                  Hardware, construction items, paint accessories...
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- ================= PRODUCT MODAL ================= -->
+
+<div
+  id="modal"
+  class="overlay hidden">
+
+  <div class="modal">
+
+    <button
+      type="button"
+      id="close"
+      class="x">
+      ×
+    </button>
+
+    <small>PRODUCT</small>
+
+    <h2 id="modalTitle">
+      Add Product
+    </h2>
+
+
+    <form
+      id="productForm"
+      class="form">
+
+
+      <input
+        type="hidden"
+        name="id">
+
+
+      <label>
+        Name
+        <input
+          name="name"
+          required
+          placeholder="Asian Wall Putty">
+      </label>
+
+
+      <label>
+        Category
+        <input
+          name="category"
+          required
+          placeholder="Putty">
+      </label>
+
+
+      <label>
+        Price ₹
+        <input
+          name="price"
+          type="number"
+          min="0"
+          placeholder="450">
+      </label>
+
+
+      <label>
+        Unit
+        <input
+          name="unit"
+          placeholder="20 KG">
+      </label>
+
+
+      <label>
+        Stock
+        <input
+          name="stock"
+          type="number"
+          min="0"
+          placeholder="10">
+      </label>
+
+
+      <label>
+        Available
+
+        <input
+          name="available"
+          type="checkbox"
+          checked>
+      </label>
+
+
+      <label class="wide">
+        Description
+
+        <textarea
+          name="description"
+          placeholder="Product details"></textarea>
+      </label>
+
+
+      <label class="wide">
+        Product Image URL
+
+        <input
+          name="image_url"
+          type="url"
+          placeholder="https://...">
+      </label>
+
+
+      <button
+        type="submit"
+        class="btn primary">
+        💾 Save Product Online
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ================= SCRIPT ================= -->
+
+<script src="js/admin.js"></script>
+
+
+<!-- ================= TAB SCRIPT ================= -->
+<script>
+document.querySelectorAll(".tab").forEach(function(tab) {
+
+  tab.addEventListener("click", function() {
+
+    const target = this.getAttribute("data-tab");
+
+    document.querySelectorAll(".tab").forEach(function(t) {
+      t.classList.remove("active");
+    });
+
+    this.classList.add("active");
+
+    document.querySelectorAll(".panel").forEach(function(panel) {
+      panel.classList.add("hidden");
+    });
+
+    const selectedPanel = document.getElementById(target);
+
+    if (selectedPanel) {
+      selectedPanel.classList.remove("hidden");
+    }
+
+  });
+
+});
+</script>
+
+</body>
+</html>

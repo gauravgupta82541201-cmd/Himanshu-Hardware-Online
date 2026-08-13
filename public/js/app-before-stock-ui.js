@@ -1,0 +1,804 @@
+const API = "/api";
+
+let shop = {};
+let products = [];
+let cart = [];
+
+const CART_STORAGE_KEY = "himanshu_hardware_cart";
+
+try {
+  const savedCart = JSON.parse(
+    localStorage.getItem(CART_STORAGE_KEY) || "[]"
+  );
+
+  cart = Array.isArray(savedCart)
+    ? savedCart.filter(
+        item =>
+          item &&
+          item.id &&
+          Number(item.qty) > 0
+      )
+    : [];
+} catch {
+  cart = [];
+}
+
+const $ = id => document.getElementById(id);
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
+}
+
+async function getJSON(url, opts = {}) {
+  const r = await fetch(url, opts);
+  const data = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+
+  return data;
+}
+
+function toast(message) {
+  let t = $("toast");
+
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+
+  t.textContent = message;
+  t.classList.add("show");
+
+  setTimeout(() => {
+    t.classList.remove("show");
+  }, 1800);
+}
+
+
+/* =========================
+   LOAD PUBLIC DATA
+========================= */
+
+async function loadPublic() {
+
+  /* =========================
+     LOAD SHOP INDEPENDENTLY
+  ========================= */
+
+  try {
+    shop = await getJSON(API + "/shop") || {};
+    applyShop();
+  } catch (e) {
+    console.error("Shop data error:", e);
+    toast("Shop information load nahi ho payi");
+  }
+
+
+  /* =========================
+     LOAD PRODUCTS INDEPENDENTLY
+  ========================= */
+
+  try {
+    const data = await getJSON(API + "/products");
+
+    products = Array.isArray(data) ? data : [];
+
+    renderProducts();
+
+  } catch (e) {
+    console.error("Products data error:", e);
+    products = [];
+    renderProducts();
+
+    toast("Products load nahi ho paaye");
+  }
+}
+
+
+/* =========================
+   SHOP DATA
+========================= */
+
+function applyShop() {
+
+  /* Shop name */
+  document
+    .querySelectorAll("[data-shop-name]")
+    .forEach(el => {
+      const name = shop.name || "Himanshu Hardware";
+      const small = el.querySelector("small");
+
+      if (small) {
+        el.firstChild.nodeValue = name;
+      } else {
+        el.textContent = name;
+      }
+    });
+
+
+  /* Shop description */
+  document
+    .querySelectorAll("[data-shop-description]")
+    .forEach(el => {
+      el.textContent =
+        shop.description ||
+        "Hardware, construction items, paint accessories, plywood aur daily repair needs — sab ek jagah.";
+    });
+
+
+  /* Phone */
+  document
+    .querySelectorAll("[data-shop-phone]")
+    .forEach(el => {
+      const phone = shop.phone || "6200908356";
+
+      el.textContent = phone;
+
+      if (el.tagName === "A") {
+        el.href = "tel:+91" + phone.replace(/\D/g, "");
+      }
+    });
+
+
+  /* Address */
+  document
+    .querySelectorAll("[data-shop-address]")
+    .forEach(el => {
+      el.textContent = shop.address || "";
+    });
+
+
+  /* WhatsApp */
+  const whatsapp = shop.whatsapp || shop.phone;
+
+  if (whatsapp) {
+    const waNumber = whatsapp.replace(/\D/g, "");
+
+    document
+      .querySelectorAll("[data-wa]")
+      .forEach(el => {
+        el.href = "https://wa.me/91" + waNumber;
+        el.target = "_blank";
+      });
+  }
+
+
+  /* Google Maps */
+  document
+    .querySelectorAll("[data-maps]")
+    .forEach(el => {
+      if (shop.maps_url) {
+        el.href = shop.maps_url;
+        el.target = "_blank";
+        el.classList.remove("hidden");
+      } else {
+        el.classList.add("hidden");
+      }
+    });
+
+
+  /* =========================
+     LOGO
+  ========================= */
+
+  document
+    .querySelectorAll("[data-logo]")
+    .forEach(el => {
+
+      if (shop.logo_url) {
+
+        el.innerHTML = `
+          <img
+            src="${esc(shop.logo_url)}"
+            alt="${esc(shop.name || "Himanshu Hardware")} Logo"
+            onerror="this.style.display='none';this.parentElement.textContent='HH';"
+          >
+        `;
+
+      } else {
+
+        el.textContent = "HH";
+
+      }
+    });
+
+
+  /* =========================
+     SOCIAL LINKS
+  ========================= */
+
+  const socialConfig = [
+    {
+      key: "instagram_url",
+      name: "Instagram",
+      icon: "📸"
+    },
+    {
+      key: "facebook_url",
+      name: "Facebook",
+      icon: "📘"
+    },
+    {
+      key: "youtube_url",
+      name: "YouTube",
+      icon: "▶️"
+    },
+    {
+      key: "website_url",
+      name: "Website",
+      icon: "🌐"
+    }
+  ];
+
+
+  socialConfig.forEach(item => {
+
+    document
+      .querySelectorAll(`[data-social="${item.name}"]`)
+      .forEach(el => {
+
+        const url = String(shop[item.key] || "").trim();
+
+        if (url) {
+
+          el.href = url;
+          el.target = "_blank";
+          el.rel = "noopener noreferrer";
+
+          /* Force visible */
+          el.classList.remove("hidden");
+
+          el.style.display = "inline-flex";
+
+          /* Keep professional HTML icons — do not replace them with emoji */
+          if (!el.dataset.iconAdded) {
+            const icon = el.querySelector(".social-icon");
+
+            if (icon) {
+              el.dataset.iconAdded = "1";
+            } else {
+              el.innerHTML = `<span class="social-icon ${item.name.toLowerCase()}-icon">${item.name === "Instagram" ? '<span class="instagram-camera"></span>' : item.icon}</span><span>${item.name}</span>`;
+              el.dataset.iconAdded = "1";
+            }
+          }
+
+        } else {
+
+          el.classList.add("hidden");
+          el.style.display = "none";
+
+        }
+      });
+  });
+
+
+  /* =========================
+     OPENING / CLOSING TIME
+  ========================= */
+
+  document
+    .querySelectorAll("[data-shop-open]")
+    .forEach(el => {
+      el.textContent = shop.open_time || "7:00 AM";
+    });
+
+  document
+    .querySelectorAll("[data-shop-close]")
+    .forEach(el => {
+      el.textContent = shop.close_time || "9:00 PM";
+    });
+
+
+  /* =========================
+     GOOGLE RATING
+  ========================= */
+
+  document
+    .querySelectorAll("[data-google-rating]")
+    .forEach(el => {
+      el.textContent =
+        (shop.google_rating || "5.0") + " ⭐";
+    });
+
+
+  console.log("Shop loaded:", shop);
+}
+
+
+/* =========================
+   PRODUCTS
+========================= */
+
+function renderProducts() {
+
+  const box = $("products");
+
+  if (!box) return;
+
+  const q =
+    ($("search")?.value || "")
+      .toLowerCase()
+      .trim();
+
+  const cat =
+    $("category")?.value || "all";
+
+
+  const cats = [
+    ...new Set(
+      products
+        .map(p => p.category)
+        .filter(Boolean)
+    )
+  ].sort();
+
+
+  if ($("category")) {
+
+    const current = $("category").value;
+
+    $("category").innerHTML =
+      '<option value="all">All Categories</option>' +
+      cats
+        .map(c => `<option value="${esc(c)}">${esc(c)}</option>`)
+        .join("");
+
+    if (
+      current &&
+      cats.includes(current)
+    ) {
+      $("category").value = current;
+    }
+  }
+
+
+  const list = products.filter(p => {
+
+    const text =
+      `${p.name || ""} ${p.category || ""} ${p.description || ""}`
+        .toLowerCase();
+
+    return (
+      (cat === "all" || p.category === cat) &&
+      text.includes(q)
+    );
+  });
+
+
+  box.innerHTML = list
+    .map(p => {
+
+      const price = Number(p.price) || 0;
+      const stock = Number(p.stock) || 0;
+
+      let stockText = "Out of Stock";
+      let stockClass = "out";
+
+      if (p.available && stock > 10) {
+        stockText = "✓ In Stock";
+        stockClass = "in";
+      } else if (p.available && stock > 0) {
+        stockText = "⚡ Limited Stock";
+        stockClass = "limited";
+      }
+
+      const cartItem = cart.find(x => x.id === p.id);
+      const qty = cartItem ? cartItem.qty : 0;
+
+      return `
+        <article class="product premium-product">
+
+          <div class="pic product-pic">
+
+            ${
+              p.image_url
+                ? `
+                  <img
+                    src="${esc(p.image_url)}"
+                    alt="${esc(p.name)}"
+                    loading="lazy"
+                    onerror="this.style.display='none';this.parentElement.classList.add('no-image');this.parentElement.innerHTML='🔨';"
+                  >
+                `
+                : `<span class="no-image-icon">🔨</span>`
+            }
+
+            <span class="product-stock ${stockClass}">
+              ${stockText}
+            </span>
+
+          </div>
+
+          <div class="pbody">
+
+            <small class="product-category">
+              ${esc(p.category || "Hardware")}
+            </small>
+
+            <h3>${esc(p.name)}</h3>
+
+            ${
+              p.description
+                ? `<p>${esc(p.description)}</p>`
+                : `<p class="product-no-description">
+                    Quality hardware product
+                  </p>`
+            }
+
+            <div class="price">
+
+              ${
+                price
+                  ? "₹" + price.toLocaleString("en-IN")
+                  : "Price on request"
+              }
+
+              ${
+                p.unit
+                  ? `<span>${esc(p.unit)}</span>`
+                  : ""
+              }
+
+            </div>
+
+            ${
+              p.available && stock > 0
+                ? `
+                  <div class="product-actions">
+
+                    <div class="product-qty">
+
+                      <button
+                        type="button"
+                        onclick="changeQty('${p.id}', -1)"
+                      >−</button>
+
+                      <b>${qty || 0}</b>
+
+                      <button
+                        type="button"
+                        onclick="changeQty('${p.id}', 1)"
+                      >+</button>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      class="btn primary product-add"
+                      onclick="addToCart('${p.id}')"
+                    >
+                      🛒 ${qty ? "Add More" : "Add to List"}
+                    </button>
+
+                  </div>
+                `
+                : `
+                  <button
+                    type="button"
+                    class="btn product-disabled"
+                    disabled
+                  >
+                    Currently unavailable
+                  </button>
+                `
+            }
+
+          </div>
+
+        </article>
+      `;
+    })
+    .join("") || `
+      <div class="products-empty">
+        <div>🔎</div>
+        <strong>No products found</strong>
+        <span>Search ya category change karke dekho.</span>
+      </div>
+    `;
+
+  renderCart();
+}
+
+
+/* =========================
+   CART
+========================= */
+
+function addToCart(id) {
+
+  const existing = cart.find(x => x.id === id);
+
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({
+      id,
+      qty: 1
+    });
+  }
+
+  renderCart();
+  toast("Product added ✓");
+}
+
+
+function changeQty(id, amount) {
+
+  const item = cart.find(x => x.id === id);
+
+  if (!item) return;
+
+  item.qty += amount;
+
+  if (item.qty < 1) {
+    cart = cart.filter(x => x.id !== id);
+  }
+
+  renderCart();
+}
+
+
+function saveCart() {
+  try {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(cart)
+    );
+  } catch (e) {
+    console.warn("Cart save failed:", e);
+  }
+}
+
+function renderCart() {
+
+  const box = $("cartItems");
+
+  saveCart();
+  updateFloatingCart();
+
+  if (!box) return;
+
+  let total = 0;
+
+  if (!cart.length) {
+
+    box.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-icon">🛍️</div>
+        <strong>Your list is empty</strong>
+        <span>Apne favourite products yahan add karo.</span>
+        <a href="products.html" class="cart-shop-btn">
+          🛒 Browse Products
+        </a>
+      </div>
+    `;
+
+  } else {
+
+    box.innerHTML = cart
+      .map(item => {
+
+        const product =
+          products.find(p => p.id === item.id);
+
+        if (!product) return "";
+
+        const price = Number(product.price) || 0;
+        const qty = Number(item.qty) || 1;
+        const subtotal = price * qty;
+
+        total += subtotal;
+
+        return `
+          <div class="cartrow">
+
+            <div class="cartrow-info">
+
+              <div class="cartrow-name">
+                ${esc(product.name)}
+              </div>
+
+              <small>
+                ₹${price.toLocaleString("en-IN")}
+                ${product.unit ? " • " + esc(product.unit) : ""}
+              </small>
+
+            </div>
+
+            <div class="cartrow-actions">
+
+              <div class="qty-control">
+
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  onclick="changeQty('${product.id}', -1)"
+                >−</button>
+
+                <b>${qty}</b>
+
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  onclick="changeQty('${product.id}', 1)"
+                >+</button>
+
+              </div>
+
+              <strong class="cartrow-subtotal">
+                ₹${subtotal.toLocaleString("en-IN")}
+              </strong>
+
+              <button
+                type="button"
+                class="cart-remove"
+                aria-label="Remove ${esc(product.name)}"
+                onclick="removeFromCart('${product.id}')"
+              >🗑️</button>
+
+            </div>
+
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  if ($("total")) {
+    $("total").textContent =
+      "₹" + total.toLocaleString("en-IN");
+  }
+}
+
+
+function updateFloatingCart() {
+
+  const countEl = $("floatingCartCount");
+  const totalEl = $("floatingCartTotal");
+
+  if (!countEl || !totalEl) return;
+
+  let count = 0;
+  let total = 0;
+
+  cart.forEach(item => {
+
+    const product =
+      products.find(p => p.id === item.id);
+
+    if (!product) return;
+
+    const qty = Number(item.qty) || 0;
+    const price = Number(product.price) || 0;
+
+    count += qty;
+    total += price * qty;
+
+  });
+
+  countEl.textContent =
+    count === 1
+      ? "1 item"
+      : `${count} items`;
+
+  totalEl.textContent =
+    "₹" + total.toLocaleString("en-IN");
+}
+
+
+function removeFromCart(id) {
+
+  cart = cart.filter(item => item.id !== id);
+
+  renderCart();
+
+  toast("Product removed");
+}
+
+
+
+/* =========================
+   SEARCH / FILTER
+========================= */
+
+$("search")?.addEventListener(
+  "input",
+  renderProducts
+);
+
+
+$("category")?.addEventListener(
+  "change",
+  renderProducts
+);
+
+
+/* =========================
+   CLEAR CART
+========================= */
+
+$("clear")?.addEventListener(
+  "click",
+  () => {
+
+    cart = [];
+
+    saveCart();
+    renderCart();
+
+    toast("List cleared");
+  }
+);
+
+
+/* =========================
+   WHATSAPP ORDER
+========================= */
+
+$("whatsapp")?.addEventListener(
+  "click",
+  () => {
+
+    if (!cart.length) {
+      toast("Cart empty hai");
+      return;
+    }
+
+
+    const number =
+      (shop.whatsapp || shop.phone || "")
+        .replace(/\D/g, "");
+
+
+    if (!number) {
+      toast("WhatsApp number available nahi hai");
+      return;
+    }
+
+
+    const lines = cart
+      .map(item => {
+
+        const p =
+          products.find(x => x.id === item.id);
+
+        return p
+          ? `• ${p.name} — Qty: ${item.qty}`
+          : "";
+      })
+      .filter(Boolean)
+      .join("\n");
+
+
+    const message =
+      `Namaste Himanshu Hardware,\n\n` +
+      `${lines}\n\n` +
+      `Please confirm availability and price.`;
+
+
+    window.open(
+      `https://wa.me/91${number}?text=${encodeURIComponent(message)}`,
+      "_blank"
+    );
+  }
+);
+
+
+/* =========================
+   START
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  loadPublic
+);

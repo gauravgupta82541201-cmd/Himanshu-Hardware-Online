@@ -1,0 +1,1 @@
+window.openProductDetails = openProductDetails; -i /class="btn product-details-btn"/a\                      onclick="openProductDetails('${p.id}')" public/js/app.js
