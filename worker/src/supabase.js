@@ -84,8 +84,44 @@ export const db = {
     }),
 
   findAdmin: (env, email) =>
-    request(
-      env,
-      `/admins?email=eq.${encodeURIComponent(email)}&select=*`
-    )
+  request(
+    env,
+    `/admins?email=eq.${encodeURIComponent(email)}&select=*`
+  ),
+
+listKarigars: (env, skill = "") => {
+  const query = skill
+    ? `/karigars?select=*&skills=cs.{${encodeURIComponent(skill)}}&order=created_at.desc`
+    : "/karigars?select=*&order=created_at.desc";
+
+  return request(env, query);
+},
+
+createKarigar: (env, karigar) =>
+  request(env, "/karigars", {
+    method: "POST",
+    body: JSON.stringify(karigar)
+  }),
+
+updateKarigar: (env, id, karigar) =>
+  request(
+    env,
+    `/karigars?id=eq.${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        ...karigar,
+        updated_at: new Date().toISOString()
+      })
+    }
+  ),
+
+deleteKarigar: (env, id) =>
+  request(
+    env,
+    `/karigars?id=eq.${encodeURIComponent(id)}`,
+    {
+      method: "DELETE"
+    }
+  )
 };

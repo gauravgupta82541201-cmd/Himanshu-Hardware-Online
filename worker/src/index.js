@@ -419,6 +419,174 @@ export default {
       }
 
 
+      /* ================= KARIGAR API ================= */
+
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/karigars"
+      ) {
+        const skill = String(
+          url.searchParams.get("skill") || ""
+        ).trim();
+
+        const karigars =
+          await db.listKarigars(env, skill);
+
+        return json(karigars);
+      }
+
+
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/karigars"
+      ) {
+        await requireAuth(request, env);
+
+        const body = await request.json();
+
+        const name = String(body.name || "").trim();
+        const phone = String(body.phone || "").trim();
+
+        if (!name || !phone) {
+          return json(
+            {
+              error: "Name and phone required"
+            },
+            400
+          );
+        }
+
+        const skills = Array.isArray(body.skills)
+          ? body.skills
+              .map((skill) => String(skill).trim())
+              .filter(Boolean)
+          : [];
+
+        const karigar = {
+          name,
+          phone,
+          whatsapp: String(body.whatsapp || "").trim(),
+          area: String(body.area || "").trim(),
+          photo_url: String(body.photo_url || "").trim(),
+          skills,
+          experience_years:
+            Number.isFinite(Number(body.experience_years))
+              ? Number(body.experience_years)
+              : 0,
+          description:
+            String(body.description || "").trim(),
+          availability:
+            ["available", "busy", "offline"].includes(
+              body.availability
+            )
+              ? body.availability
+              : "available"
+        };
+
+        const created =
+          await db.createKarigar(
+            env,
+            karigar
+          );
+
+        return json(
+          created?.[0] || created,
+          201
+        );
+      }
+
+
+      const karigarMatch =
+        url.pathname.match(
+          /^\/api\/karigars\/([^/]+)$/
+        );
+
+
+      if (
+        request.method === "PATCH" &&
+        karigarMatch
+      ) {
+        await requireAuth(request, env);
+
+        const id =
+          decodeURIComponent(
+            karigarMatch[1]
+          );
+
+        const body = await request.json();
+
+        const skills = Array.isArray(body.skills)
+          ? body.skills
+              .map((skill) => String(skill).trim())
+              .filter(Boolean)
+          : [];
+
+        const karigar = {
+          name: String(body.name || "").trim(),
+          phone: String(body.phone || "").trim(),
+          whatsapp: String(body.whatsapp || "").trim(),
+          area: String(body.area || "").trim(),
+          photo_url: String(body.photo_url || "").trim(),
+          skills,
+          experience_years:
+            Number.isFinite(Number(body.experience_years))
+              ? Number(body.experience_years)
+              : 0,
+          description:
+            String(body.description || "").trim(),
+          availability:
+            ["available", "busy", "offline"].includes(
+              body.availability
+            )
+              ? body.availability
+              : "available"
+        };
+
+        if (!karigar.name || !karigar.phone) {
+          return json(
+            {
+              error: "Name and phone required"
+            },
+            400
+          );
+        }
+
+        const updated =
+          await db.updateKarigar(
+            env,
+            id,
+            karigar
+          );
+
+        return json(
+          updated?.[0] || updated
+        );
+      }
+
+
+      if (
+        request.method === "DELETE" &&
+        karigarMatch
+      ) {
+        await requireAuth(request, env);
+
+        const id =
+          decodeURIComponent(
+            karigarMatch[1]
+          );
+
+        await db.deleteKarigar(
+          env,
+          id
+        );
+
+        return json({
+          ok: true,
+          deleted: id
+        });
+      }
+
+
       /* ================= IMAGE UPLOAD ================= */
 
       if (
