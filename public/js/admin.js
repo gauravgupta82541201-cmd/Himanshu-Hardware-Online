@@ -1,5 +1,6 @@
 let token = localStorage.getItem("hh_admin_token");
 let adminProducts = [];
+let adminKarigars = [];
 
 const $ = (id) => document.getElementById(id);
 
@@ -54,6 +55,127 @@ async function api(url, options = {}) {
   return data;
 }
 
+/* ================= KARIGARS ================= */
+
+async function loadKarigars() {
+  try {
+    const data = await api("/api/karigars");
+
+    adminKarigars =
+      Array.isArray(data) ? data : [];
+
+    renderKarigars();
+
+  } catch (error) {
+    console.error("LOAD KARIGARS ERROR:", error);
+
+    adminKarigars = [];
+
+    renderKarigars();
+
+    toast("Karigars load nahi ho paaye");
+  }
+}
+
+
+function renderKarigars() {
+  const container = $("adminKarigars");
+
+  if (!container) return;
+
+  if (!adminKarigars.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:42px;">👷</div>
+        <h3>Abhi koi Karigar nahi hai</h3>
+        <p>
+          "Add Karigar" se pehla mistri/service worker add karein.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = adminKarigars
+    .map((karigar) => `
+      <div class="admin-karigar-card">
+
+        <div class="admin-karigar-info">
+
+          <div class="admin-karigar-avatar">
+            ${
+              karigar.photo_url
+                ? `<img src="${esc(karigar.photo_url)}" alt="${esc(karigar.name)}">`
+                : "👷"
+            }
+          </div>
+
+          <div>
+            <h3>${esc(karigar.name)}</h3>
+
+            <p>
+              📞 ${esc(karigar.phone)}
+            </p>
+
+            ${
+              karigar.area
+                ? `<p>📍 ${esc(karigar.area)}</p>`
+                : ""
+            }
+
+            ${
+              Array.isArray(karigar.skills) &&
+              karigar.skills.length
+                ? `<p>🧰 ${karigar.skills.map(esc).join(" • ")}</p>`
+                : ""
+            }
+
+          </div>
+
+        </div>
+
+        <div class="admin-karigar-meta">
+
+          <span>
+            ${
+              karigar.availability === "available"
+                ? "🟢 Available"
+                : karigar.availability === "busy"
+                  ? "🟡 Busy"
+                  : "⚫ Offline"
+            }
+          </span>
+
+          <span>
+            ⭐ ${Number(karigar.experience_years || 0)} years
+          </span>
+
+        </div>
+
+        <div class="admin-karigar-actions">
+
+          <button
+            type="button"
+            class="btn"
+            data-karigar-edit="${esc(karigar.id)}">
+            ✏️ Edit
+          </button>
+
+          <button
+            type="button"
+            class="btn danger"
+            data-karigar-delete="${esc(karigar.id)}">
+            🗑️ Delete
+          </button>
+
+        </div>
+
+      </div>
+    `)
+    .join("");
+}
+
+
 /* ================= LOGIN ================= */
 
 async function login() {
@@ -97,6 +219,259 @@ async function login() {
   }
 }
 
+/* ================= KARIGAR FORM ================= */
+
+function openKarigarModal(karigar = null) {
+  const modal = $("karigarModal");
+  const form = $("karigarForm");
+
+  if (!modal || !form) return;
+
+  form.reset();
+
+  $("karigarId").value =
+    karigar?.id || "";
+
+  $("karigarModalTitle").textContent =
+    karigar
+      ? "✏️ Edit Karigar"
+      : "➕ Add Karigar";
+
+  $("karigarName").value =
+    karigar?.name || "";
+
+  $("karigarPhone").value =
+    karigar?.phone || "";
+
+  $("karigarWhatsapp").value =
+    karigar?.whatsapp || "";
+
+  $("karigarArea").value =
+    karigar?.area || "";
+
+  $("karigarSkills").value =
+    Array.isArray(karigar?.skills)
+      ? karigar.skills.join(", ")
+      : "";
+
+  $("karigarExperience").value =
+    Number(karigar?.experience_years || 0);
+
+  $("karigarAvailabilityForm").value =
+    karigar?.availability || "available";
+
+  $("karigarPhoto").value =
+    karigar?.photo_url || "";
+
+  $("karigarDescription").value =
+    karigar?.description || "";
+
+  modal.classList.remove("hidden");
+}
+
+
+function closeKarigarModal() {
+  $("karigarModal")?.classList.add("hidden");
+}
+
+
+async function saveKarigar(event) {
+  event.preventDefault();
+
+  const id =
+    $("karigarId")?.value.trim();
+
+  const name =
+    $("karigarName")?.value.trim();
+
+  const phone =
+    $("karigarPhone")?.value.trim();
+
+  if (!name || !phone) {
+    toast("Name aur phone required");
+    return;
+  }
+
+  const skills =
+    $("karigarSkills")
+      ?.value
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean) || [];
+
+  const body = {
+    name,
+    phone,
+
+    whatsapp:
+      $("karigarWhatsapp")?.value.trim() || "",
+
+    area:
+      $("karigarArea")?.value.trim() || "",
+
+    skills,
+
+    experience_years:
+      Number(
+        $("karigarExperience")?.value || 0
+      ),
+
+    availability:
+      $("karigarAvailabilityForm")?.value ||
+      "available",
+
+    photo_url:
+      $("karigarPhoto")?.value.trim() || "",
+
+    description:
+      $("karigarDescription")?.value.trim() || ""
+  };
+
+  try {
+    await api(
+      id
+        ? `/api/karigars/${encodeURIComponent(id)}`
+        : "/api/karigars",
+      {
+        method: id ? "PATCH" : "POST",
+        body: JSON.stringify(body)
+      }
+    );
+
+    toast(
+      id
+        ? "Karigar updated ✓"
+        : "Karigar added ✓"
+    );
+
+    closeKarigarModal();
+
+    await loadKarigars();
+
+  } catch (error) {
+    console.error(
+      "SAVE KARIGAR ERROR:",
+      error
+    );
+
+    toast(
+      error.message ||
+      "Karigar save nahi ho paaya"
+    );
+  }
+}
+
+
+async function deleteKarigar(id) {
+  if (!id) return;
+
+  const karigar =
+    adminKarigars.find(
+      (item) => String(item.id) === String(id)
+    );
+
+  const name =
+    karigar?.name || "this Karigar";
+
+  if (
+    !confirm(
+      `${name} ko delete karna hai?`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await api(
+      `/api/karigars/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    toast("Karigar deleted ✓");
+
+    await loadKarigars();
+
+  } catch (error) {
+    console.error(
+      "DELETE KARIGAR ERROR:",
+      error
+    );
+
+    toast(
+      error.message ||
+      "Karigar delete nahi ho paaya"
+    );
+  }
+}
+
+
+/* Karigar UI events */
+
+$("addKarigar")?.addEventListener(
+  "click",
+  () => openKarigarModal()
+);
+
+$("closeKarigarModal")?.addEventListener(
+  "click",
+  closeKarigarModal
+);
+
+$("cancelKarigar")?.addEventListener(
+  "click",
+  closeKarigarModal
+);
+
+$("karigarForm")?.addEventListener(
+  "submit",
+  saveKarigar
+);
+
+
+$("adminKarigars")?.addEventListener(
+  "click",
+  (event) => {
+
+    const editButton =
+      event.target.closest(
+        "[data-karigar-edit]"
+      );
+
+    if (editButton) {
+      const id =
+        editButton.dataset.karigarEdit;
+
+      const karigar =
+        adminKarigars.find(
+          (item) =>
+            String(item.id) === String(id)
+        );
+
+      if (karigar) {
+        openKarigarModal(karigar);
+      }
+
+      return;
+    }
+
+
+    const deleteButton =
+      event.target.closest(
+        "[data-karigar-delete]"
+      );
+
+    if (deleteButton) {
+      deleteKarigar(
+        deleteButton.dataset.karigarDelete
+      );
+    }
+
+  }
+);
+
+
 /* ================= DASHBOARD ================= */
 
 function showDash() {
@@ -111,6 +486,8 @@ async function loadAdmin() {
     adminProducts = await api("/api/products");
 
     refreshInventory();
+
+    await loadKarigars();
 
     const response = await fetch("/api/shop");
     const settings = await response.json();

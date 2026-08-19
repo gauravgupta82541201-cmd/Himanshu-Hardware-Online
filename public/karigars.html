@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mistri & Services | Himanshu Hardware</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.kg-hero{padding:70px 20px 45px;background:linear-gradient(135deg,#111827,#334155);color:#fff}
+.kg-hero h1{font-size:clamp(38px,7vw,72px);margin:10px 0}
+.kg-hero em{color:#f59e0b}
+.kg-hero p{max-width:720px;color:#cbd5e1;font-size:17px;line-height:1.7}
+.kg-tools{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-top:28px}
+.kg-tools input,.kg-tools select{width:100%;padding:15px;border:0;border-radius:12px;font-size:15px}
+.kg-services{display:flex;gap:10px;overflow:auto;padding:25px 0}
+.kg-chip{border:1px solid #e2e8f0;background:#fff;padding:11px 16px;border-radius:999px;white-space:nowrap;cursor:pointer}
+.kg-chip.active{background:#111827;color:#fff}
+.kg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px}
+.kg-card{background:#fff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 8px 25px rgba(15,23,42,.08)}
+.kg-photo{height:210px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:70px}
+.kg-photo img{width:100%;height:100%;object-fit:cover}
+.kg-body{padding:20px}
+.kg-body h3{margin:0 0 5px;font-size:21px}
+.kg-area{color:#64748b;font-size:14px}
+.kg-skills{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}
+.kg-skill{background:#f1f5f9;padding:6px 9px;border-radius:8px;font-size:12px}
+.kg-status{font-size:13px;font-weight:700;margin-bottom:15px}
+.kg-status.available{color:#16a34a}.kg-status.busy{color:#d97706}.kg-status.offline{color:#64748b}
+.kg-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.kg-actions a{padding:12px;border-radius:10px;text-align:center;text-decoration:none;font-weight:700}
+.kg-call{background:#111827;color:#fff}.kg-wa{background:#16a34a;color:#fff}
+.kg-empty{text-align:center;padding:60px 20px;color:#64748b}
+@media(max-width:700px){.kg-tools{grid-template-columns:1fr}.kg-hero{padding-top:45px}}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="wrap nav">
+<a class="brand" href="index.html">
+<b>HH</b>
+<span>Himanshu Hardware<small>Remba • Giridih</small></span>
+</a>
+<nav>
+<a href="index.html">Home</a>
+<a href="products.html">Products</a>
+<a class="active" href="karigars.html">Mistri & Services</a>
+<a href="about.html">About</a>
+<a href="contact.html">Contact</a>
+<a href="admin.html">🔐 Admin</a>
+</nav>
+</div>
+</header>
+
+<section class="kg-hero">
+<div class="wrap">
+<small>LOCAL SERVICE DIRECTORY</small>
+<h1>Mistri & <em>Services</em></h1>
+<p>
+Electrician, plumber, carpenter, raj mistri, painter, welder,
+tempo aur all-rounder — apne area ka kaamgar yahin se dhoondhiye.
+</p>
+
+<div class="kg-tools">
+<input id="search" type="search" placeholder="🔎 Naam, skill ya area search karein">
+<select id="skill">
+<option value="">All Services</option>
+</select>
+<select id="availability">
+<option value="">All Availability</option>
+<option value="available">🟢 Available</option>
+<option value="busy">🟡 Busy</option>
+<option value="offline">⚫ Offline</option>
+</select>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="wrap">
+
+<div id="services" class="kg-services"></div>
+
+<div id="status" style="margin-bottom:20px;color:#64748b">
+Loading services...
+</div>
+
+<div id="grid" class="kg-grid"></div>
+
+<div id="empty" class="kg-empty" style="display:none">
+👷 Abhi koi karigar listed nahi hai.
+</div>
+
+</div>
+</section>
+
+<footer>
+<div class="wrap">
+<b>Himanshu Hardware</b>
+<span> • Mistri & Services Directory</span>
+</div>
+</footer>
+
+<script>
+const API="/api/karigars";
+
+const categories=[
+["⚡","Electrician"],
+["🚰","Plumber"],
+["🪚","Carpenter"],
+["🧱","Raj Mistri"],
+["🎨","Painter"],
+["🔥","Welder"],
+["🚚","Tempo / Loading"],
+["🛠️","All-rounder"]
+];
+
+let all=[];
+
+const $=id=>document.getElementById(id);
+
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,m=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[m]));
+}
+
+function renderCategories(){
+$("services").innerHTML=
+`<button class="kg-chip active" data-value="">All</button>`+
+categories.map(c=>
+`<button class="kg-chip" data-value="${esc(c[1])}">
+${c[0]} ${esc(c[1])}
+</button>`).join("");
+
+document.querySelectorAll(".kg-chip").forEach(btn=>{
+btn.onclick=()=>{
+document.querySelectorAll(".kg-chip")
+.forEach(x=>x.classList.remove("active"));
+btn.classList.add("active");
+$("skill").value=btn.dataset.value;
+render();
+};
+});
+}
+
+function renderSkillOptions(){
+const skills=[...new Set(
+all.flatMap(x=>Array.isArray(x.skills)?x.skills:[])
+.map(x=>String(x).trim())
+.filter(Boolean)
+)].sort();
+
+$("skill").innerHTML=
+`<option value="">All Services</option>`+
+skills.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+}
+
+function render(){
+const q=$("search").value.trim().toLowerCase();
+const skill=$("skill").value;
+const availability=$("availability").value;
+
+const list=all.filter(k=>{
+const text=[
+k.name,k.area,k.description,
+...(Array.isArray(k.skills)?k.skills:[])
+].join(" ").toLowerCase();
+
+if(q&&!text.includes(q))return false;
+
+if(skill&&!(Array.isArray(k.skills)&&k.skills.includes(skill)))
+return false;
+
+if(availability&&k.availability!==availability)
+return false;
+
+return true;
+});
+
+$("status").textContent=
+`${list.length} service provider${list.length===1?"":"s"} found`;
+
+$("empty").style.display=list.length?"none":"block";
+
+$("grid").innerHTML=list.map(k=>{
+const skills=Array.isArray(k.skills)?k.skills:[];
+
+const status=k.availability||"available";
+
+const statusText={
+available:"🟢 Available",
+busy:"🟡 Busy",
+offline:"⚫ Offline"
+}[status]||"🟢 Available";
+
+const phone=String(k.phone||"").replace(/\D/g,"");
+
+const wa=String(k.whatsapp||k.phone||"")
+.replace(/\D/g,"");
+
+return `
+<article class="kg-card">
+
+<div class="kg-photo">
+${
+k.photo_url
+?`<img src="${esc(k.photo_url)}" alt="${esc(k.name)}">`
+:"👷"
+}
+</div>
+
+<div class="kg-body">
+
+<h3>${esc(k.name)}</h3>
+
+<div class="kg-area">
+📍 ${esc(k.area||"Area not specified")}
+</div>
+
+<div class="kg-skills">
+${skills.map(s=>`<span class="kg-skill">${esc(s)}</span>`).join("")}
+</div>
+
+<div class="kg-status ${esc(status)}">
+${statusText}
+${Number(k.experience_years||0)>0
+?` • ${Number(k.experience_years)} years experience`
+:""}
+</div>
+
+${
+k.description
+?`<p>${esc(k.description)}</p>`
+:""
+}
+
+<div class="kg-actions">
+
+<a class="kg-call"
+href="tel:${phone}">
+📞 Call
+</a>
+
+<a class="kg-wa"
+target="_blank"
+rel="noopener"
+href="https://wa.me/${wa}">
+💬 WhatsApp
+</a>
+
+</div>
+
+</div>
+</article>
+`;
+}).join("");
+}
+
+async function load(){
+try{
+const res=await fetch(API);
+const data=await res.json();
+
+if(!res.ok)throw new Error(data.error||"Failed");
+
+all=Array.isArray(data)?data:[];
+
+renderCategories();
+renderSkillOptions();
+render();
+
+}catch(e){
+$("status").textContent="Services load nahi ho paayi.";
+$("empty").style.display="block";
+$("empty").textContent="⚠️ "+e.message;
+}
+}
+
+$("search").addEventListener("input",render);
+$("skill").addEventListener("change",render);
+$("availability").addEventListener("change",render);
+
+load();
+</script>
+
+</body>
+</html>

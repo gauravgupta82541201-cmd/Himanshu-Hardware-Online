@@ -103,6 +103,13 @@
         🏪 Shop & Social
       </button>
 
+      <button
+        type="button"
+        class="tab"
+        data-tab="karigars">
+        👷 Karigars
+      </button>
+
     </div>
 
 
@@ -196,6 +203,206 @@
       </div>
 
       <div id="adminProducts"></div>
+
+    </div>
+
+
+    <!-- ================= KARIGARS ================= -->
+
+    <div
+      id="karigars"
+      class="panel hidden">
+
+      <div class="head">
+
+        <div>
+          <small>LOCAL SERVICE DIRECTORY</small>
+          <h2>👷 Karigar Management</h2>
+          <small>
+            Mistri, electrician, plumber, carpenter, tempo aur
+            all-rounder manage karein.
+          </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn primary"
+          id="addKarigar">
+          ＋ Add Karigar
+        </button>
+
+      </div>
+
+      <div class="inventory-tools">
+
+        <div class="inventory-filters">
+
+          <input
+            id="karigarSearch"
+            type="search"
+            placeholder="🔎 Naam, phone ya area search karein..."
+          >
+
+          <select id="karigarSkill">
+            <option value="">All Services</option>
+          </select>
+
+          <select id="karigarAvailability">
+            <option value="">All Status</option>
+            <option value="available">🟢 Available</option>
+            <option value="busy">🟡 Busy</option>
+            <option value="offline">⚫ Offline</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <div
+        id="adminKarigars"
+        class="admin-karigars">
+      </div>
+
+    </div>
+
+
+    <!-- ================= KARIGAR MODAL ================= -->
+
+    <div
+      id="karigarModal"
+      class="modal hidden">
+
+      <div class="modal-content">
+
+        <div class="head">
+          <div>
+            <small>KARIGAR MANAGEMENT</small>
+            <h2 id="karigarModalTitle">➕ Add Karigar</h2>
+          </div>
+
+          <button
+            type="button"
+            class="btn"
+            id="closeKarigarModal">
+            ✕
+          </button>
+        </div>
+
+        <form id="karigarForm" class="form">
+
+          <input
+            type="hidden"
+            name="id"
+            id="karigarId">
+
+          <label>
+            Karigar Name
+            <input
+              name="name"
+              id="karigarName"
+              type="text"
+              placeholder="Ramesh Mistri"
+              required>
+          </label>
+
+          <label>
+            Phone
+            <input
+              name="phone"
+              id="karigarPhone"
+              type="tel"
+              placeholder="9876543210"
+              required>
+          </label>
+
+          <label>
+            WhatsApp
+            <input
+              name="whatsapp"
+              id="karigarWhatsapp"
+              type="tel"
+              placeholder="9876543210">
+          </label>
+
+          <label>
+            Area
+            <input
+              name="area"
+              id="karigarArea"
+              type="text"
+              placeholder="Koderma / Jhumri Telaiya">
+          </label>
+
+          <label>
+            Services / Skills
+            <input
+              name="skills"
+              id="karigarSkills"
+              type="text"
+              placeholder="Mistri, Plumber, Electrician">
+            <small>Comma se multiple skills likh sakte hain.</small>
+          </label>
+
+          <label>
+            Experience
+            <input
+              name="experience_years"
+              id="karigarExperience"
+              type="number"
+              min="0"
+              max="60"
+              value="0">
+          </label>
+
+          <label>
+            Status
+            <select
+              name="availability"
+              id="karigarAvailabilityForm">
+              <option value="available">🟢 Available</option>
+              <option value="busy">🟡 Busy</option>
+              <option value="offline">⚫ Offline</option>
+            </select>
+          </label>
+
+          <label class="wide">
+            Photo URL
+            <input
+              name="photo_url"
+              id="karigarPhoto"
+              type="url"
+              placeholder="https://...">
+          </label>
+
+          <label class="wide">
+            Description
+            <textarea
+              name="description"
+              id="karigarDescription"
+              rows="4"
+              placeholder="Kaam ka short description..."></textarea>
+          </label>
+
+          <div class="wide form-actions">
+
+            <button
+              type="button"
+              class="btn"
+              id="cancelKarigar">
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="btn primary">
+              💾 Save Karigar
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
 
     </div>
 
