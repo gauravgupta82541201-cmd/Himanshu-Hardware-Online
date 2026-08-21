@@ -89,6 +89,12 @@ export const db = {
     `/admins?email=eq.${encodeURIComponent(email)}&select=*`
   ),
 
+findKarigarByLoginId: (env, loginId) =>
+  request(
+    env,
+    `/karigars?login_id=eq.${encodeURIComponent(loginId)}&select=*`
+  ),
+
 listKarigars: (env, skill = "") => {
   const query = skill
     ? `/karigars?select=*&skills=cs.{${encodeURIComponent(skill)}}&order=created_at.desc`

@@ -307,6 +307,100 @@ export default {
       }
 
 
+      /* ================= KARIGAR LOGIN ================= */
+
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/karigar/login"
+      ) {
+        const body = await request.json();
+
+        const loginId = String(
+          body.login_id || body.loginId || ""
+        ).trim();
+
+        const password = String(
+          body.password || ""
+        );
+
+        if (!loginId || !password) {
+          return json(
+            {
+              error: "Login ID and password required"
+            },
+            400
+          );
+        }
+
+        if (!env.JWT_SECRET) {
+          return json(
+            {
+              error: "JWT_SECRET is missing"
+            },
+            500
+          );
+        }
+
+        const rows =
+          await db.findKarigarByLoginId(
+            env,
+            loginId
+          );
+
+        const karigar = rows?.[0];
+
+        const passwordMatch = karigar?.password_hash
+          ? await bcrypt.compare(
+              password,
+              karigar.password_hash
+            )
+          : false;
+
+        if (!karigar || !passwordMatch) {
+          return json(
+            {
+              error: "Invalid login ID or password"
+            },
+            401
+          );
+        }
+
+        const now =
+          Math.floor(Date.now() / 1000);
+
+        const token = await signJwt(
+          {
+            id: karigar.id,
+            role: "karigar",
+            login_id: karigar.login_id,
+            iat: now,
+            exp: now + 8 * 60 * 60
+          },
+          env.JWT_SECRET
+        );
+
+        return json({
+          token,
+          karigar: {
+            id: karigar.id,
+            name: karigar.name,
+            phone: karigar.phone,
+            login_id: karigar.login_id,
+            whatsapp: karigar.whatsapp || "",
+            area: karigar.area || "",
+            photo_url: karigar.photo_url || "",
+            skills: karigar.skills || [],
+            experience_years:
+              karigar.experience_years || 0,
+            description:
+              karigar.description || "",
+            availability:
+              karigar.availability || "available"
+          }
+        });
+      }
+
+
       /* ================= CREATE PRODUCT ================= */
 
       if (
@@ -419,7 +513,26 @@ export default {
       }
 
 
-      /* ================= KARIGAR API ================= */
+
+      /* ================= KARIGAR PROFILE ================= */
+
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/karigar/me"
+      ) {
+        const user = await requireAuth(request, env);
+
+        if (user.role !== "karigar") {
+          return json({ error: "Access denied" }, 403);
+        }
+
+        const rows = await db.findKarigarByLoginId(env, user.login_id);
+        const karigar = rows?.[0];
+
+        return json(karigar || {});
+      }
+
+/* ================= KARIGAR API ================= */
 
       if (
         request.method === "GET" &&

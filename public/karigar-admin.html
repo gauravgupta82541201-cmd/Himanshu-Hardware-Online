@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karigar Panel | Himanshu Hardware</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.ka-wrap{max-width:1000px;margin:40px auto;padding:20px}
+.ka-top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+.ka-card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.07);margin-bottom:20px}
+.ka-profile{display:flex;align-items:center;gap:20px}
+.ka-photo{width:90px;height:90px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
+.ka-photo img{width:100%;height:100%;object-fit:cover}
+.ka-profile h1{margin:0 0 5px}
+.ka-muted{color:#64748b}
+.ka-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.ka-item{padding:15px;background:#f8fafc;border-radius:14px}
+.ka-label{font-size:12px;color:#64748b;font-weight:700}
+.ka-value{margin-top:5px;font-weight:700}
+.ka-skills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ka-skill{padding:7px 10px;background:#e2e8f0;border-radius:8px;font-size:13px}
+.ka-logout{border:0;padding:11px 16px;border-radius:10px;background:#dc2626;color:#fff;font-weight:700;cursor:pointer}
+.ka-status{font-weight:800}
+.available{color:#16a34a}.busy{color:#d97706}.offline{color:#64748b}
+.ka-empty{text-align:center;color:#64748b;padding:25px}
+@media(max-width:650px){
+.ka-top,.ka-profile{align-items:flex-start;flex-direction:column}
+.ka-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="wrap nav">
+<a class="brand" href="index.html">
+<b>HH</b>
+<span>Himanshu Hardware<small>Remba • Giridih</small></span>
+</a>
+<nav>
+<a href="index.html">Home</a>
+<a href="products.html">Products</a>
+<a href="karigars.html">Mistri & Services</a>
+<a href="contact.html">Contact</a>
+</nav>
+</div>
+</header>
+
+<main class="ka-wrap">
+
+<div class="ka-top">
+<div>
+<small>HIMANSHU HARDWARE</small>
+<h1>👷 Karigar Panel</h1>
+</div>
+
+<button id="logout" class="ka-logout">
+Logout
+</button>
+</div>
+
+<section class="ka-card">
+<div class="ka-profile">
+
+<div id="photo" class="ka-photo">👷</div>
+
+<div>
+<h1 id="name">Loading...</h1>
+<div id="loginId" class="ka-muted"></div>
+</div>
+
+</div>
+</section>
+
+<section class="ka-card">
+
+<h2>My Profile</h2>
+
+<div class="ka-grid">
+
+<div class="ka-item">
+<div class="ka-label">PHONE</div>
+<div id="phone" class="ka-value">—</div>
+</div>
+
+<div class="ka-item">
+<div class="ka-label">AREA</div>
+<div id="area" class="ka-value">—</div>
+</div>
+
+<div class="ka-item">
+<div class="ka-label">EXPERIENCE</div>
+<div id="experience" class="ka-value">—</div>
+</div>
+
+<div class="ka-item">
+<div class="ka-label">AVAILABILITY</div>
+<div id="availability" class="ka-value">—</div>
+</div>
+
+</div>
+
+<h3>Skills</h3>
+<div id="skills" class="ka-skills"></div>
+
+<h3>Description</h3>
+<p id="description" class="ka-muted">—</p>
+
+</section>
+
+<section class="ka-card">
+
+<h2>📋 My Work History</h2>
+
+<div class="ka-empty">
+Work history yahan show hoga.
+</div>
+
+</section>
+
+</main>
+
+<script>
+const token = localStorage.getItem("karigar_token");
+
+if (!token) {
+  location.href = "karigar-login.html";
+}
+
+const $ = id => document.getElementById(id);
+
+function esc(v){
+  return String(v ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[m]));
+}
+
+async function loadProfile(){
+
+  try {
+
+    const response = await fetch("/api/karigar/me", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Session expired");
+    }
+
+    $("name").textContent = data.name || "Karigar";
+    $("loginId").textContent =
+      "Login ID: " + (data.login_id || data.phone || "");
+
+    $("phone").textContent = data.phone || "—";
+    $("area").textContent = data.area || "—";
+
+    const years = Number(data.experience_years || 0);
+    $("experience").textContent =
+      years ? years + " years" : "Not specified";
+
+    const status = data.availability || "available";
+
+    const statusText = {
+      available: "🟢 Available",
+      busy: "🟡 Busy",
+      offline: "⚫ Offline"
+    };
+
+    $("availability").innerHTML =
+      '<span class="' + esc(status) + '">' +
+      (statusText[status] || "🟢 Available") +
+      "</span>";
+
+    const skills = Array.isArray(data.skills)
+      ? data.skills
+      : [];
+
+    $("skills").innerHTML = skills.length
+      ? skills.map(x =>
+          '<span class="ka-skill">' +
+          esc(x) +
+          "</span>"
+        ).join("")
+      : '<span class="ka-muted">No skills added</span>';
+
+    $("description").textContent =
+      data.description || "No description added.";
+
+    if (data.photo_url) {
+      $("photo").innerHTML =
+        '<img src="' +
+        esc(data.photo_url) +
+        '" alt="' +
+        esc(data.name) +
+        '">';
+    }
+
+  } catch (err) {
+
+    localStorage.removeItem("karigar_token");
+    localStorage.removeItem("karigar_profile");
+
+    alert(err.message);
+    location.href = "karigar-login.html";
+  }
+}
+
+$("logout").onclick = () => {
+  localStorage.removeItem("karigar_token");
+  localStorage.removeItem("karigar_profile");
+  location.href = "karigar-login.html";
+};
+
+loadProfile();
+</script>
+
+</body>
+</html>

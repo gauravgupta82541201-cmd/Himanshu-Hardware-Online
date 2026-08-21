@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karigar Login | Himanshu Hardware</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.kl-wrap{max-width:480px;margin:80px auto;padding:20px}
+.kl-card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:30px;box-shadow:0 15px 40px rgba(15,23,42,.1)}
+.kl-icon{font-size:58px;text-align:center}
+.kl-card h1{text-align:center;margin:10px 0 5px}
+.kl-sub{text-align:center;color:#64748b;margin-bottom:25px}
+.kl-card label{display:block;font-weight:700;margin:15px 0 7px}
+.kl-card input{width:100%;box-sizing:border-box;padding:14px;border:1px solid #dbe2ea;border-radius:12px;font-size:16px}
+.kl-btn{width:100%;margin-top:20px;padding:15px;border:0;border-radius:12px;background:#111827;color:#fff;font-weight:800;font-size:16px;cursor:pointer}
+.kl-btn:disabled{opacity:.6}
+.kl-error{display:none;margin-top:15px;padding:12px;border-radius:10px;background:#fee2e2;color:#b91c1c}
+.kl-back{display:block;text-align:center;margin-top:18px;color:#64748b;text-decoration:none}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="wrap nav">
+<a class="brand" href="index.html">
+<b>HH</b>
+<span>Himanshu Hardware<small>Remba • Giridih</small></span>
+</a>
+<nav>
+<a href="index.html">Home</a>
+<a href="products.html">Products</a>
+<a href="karigars.html">Mistri & Services</a>
+<a href="about.html">About</a>
+<a href="contact.html">Contact</a>
+</nav>
+</div>
+</header>
+
+<main class="kl-wrap">
+<div class="kl-card">
+
+<div class="kl-icon">👷‍♂️</div>
+
+<h1>Karigar Login</h1>
+<div class="kl-sub">Apne profile aur work history ke liye login karein</div>
+
+<form id="loginForm">
+
+<label for="loginId">Mobile Number / Login ID</label>
+<input id="loginId" type="text" inputmode="numeric"
+placeholder="Example: 6200908356" required>
+
+<label for="password">Password</label>
+<input id="password" type="password"
+placeholder="Enter password" required>
+
+<button id="loginBtn" class="kl-btn" type="submit">
+Login
+</button>
+
+<div id="error" class="kl-error"></div>
+
+</form>
+
+<a class="kl-back" href="karigars.html">
+← Back to Mistri & Services
+</a>
+
+</div>
+</main>
+
+<script>
+const form = document.getElementById("loginForm");
+const btn = document.getElementById("loginBtn");
+const error = document.getElementById("error");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  error.style.display = "none";
+  btn.disabled = true;
+  btn.textContent = "Logging in...";
+
+  try {
+    const response = await fetch("/api/karigar/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        login_id: document.getElementById("loginId").value.trim(),
+        password: document.getElementById("password").value
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Login failed");
+    }
+
+    localStorage.setItem("karigar_token", data.token);
+    localStorage.setItem("karigar_profile", JSON.stringify(data.karigar));
+
+    location.href = "karigar-admin.html";
+
+  } catch (err) {
+    error.textContent = err.message;
+    error.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Login";
+  }
+});
+</script>
+
+</body>
+</html>
