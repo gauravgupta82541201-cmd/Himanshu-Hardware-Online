@@ -325,28 +325,6 @@
           </label>
 
           <label>
-            Login ID
-            <input
-              name="login_id"
-              id="karigarLoginId"
-              type="text"
-              placeholder="ramesh123"
-              autocomplete="username">
-            <small>Karigar isi ID se login karega.</small>
-          </label>
-
-          <label>
-            Password
-            <input
-              name="password"
-              id="karigarPassword"
-              type="password"
-              placeholder="Set login password"
-              autocomplete="new-password">
-            <small>Karigar ko ye password login ke liye dena hoga.</small>
-          </label>
-
-          <label>
             Area
             <input
               name="area"

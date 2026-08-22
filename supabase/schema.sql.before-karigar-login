@@ -44,20 +44,3 @@ create table if not exists shop_settings (
 );
 
 insert into shop_settings (id) values (1) on conflict (id) do nothing;
-create table if not exists karigars (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  phone text not null,
-  whatsapp text default '',
-  area text default '',
-  photo_url text default '',
-  skills jsonb default '[]'::jsonb,
-  experience_years integer default 0,
-  description text default '',
-  availability text default 'available'
-    check (availability in ('available', 'busy', 'offline')),
-  login_id text unique not null,
-  password_hash text not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);

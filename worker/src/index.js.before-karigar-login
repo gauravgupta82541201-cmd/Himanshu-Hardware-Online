@@ -307,100 +307,6 @@ export default {
       }
 
 
-      /* ================= KARIGAR LOGIN ================= */
-
-      if (
-        request.method === "POST" &&
-        url.pathname === "/api/karigar/login"
-      ) {
-        const body = await request.json();
-
-        const loginId = String(
-          body.login_id || body.loginId || ""
-        ).trim();
-
-        const password = String(
-          body.password || ""
-        );
-
-        if (!loginId || !password) {
-          return json(
-            {
-              error: "Login ID and password required"
-            },
-            400
-          );
-        }
-
-        if (!env.JWT_SECRET) {
-          return json(
-            {
-              error: "JWT_SECRET is missing"
-            },
-            500
-          );
-        }
-
-        const rows =
-          await db.findKarigarByLoginId(
-            env,
-            loginId
-          );
-
-        const karigar = rows?.[0];
-
-        const passwordMatch = karigar?.password_hash
-          ? await bcrypt.compare(
-              password,
-              karigar.password_hash
-            )
-          : false;
-
-        if (!karigar || !passwordMatch) {
-          return json(
-            {
-              error: "Invalid login ID or password"
-            },
-            401
-          );
-        }
-
-        const now =
-          Math.floor(Date.now() / 1000);
-
-        const token = await signJwt(
-          {
-            id: karigar.id,
-            role: "karigar",
-            login_id: karigar.login_id,
-            iat: now,
-            exp: now + 8 * 60 * 60
-          },
-          env.JWT_SECRET
-        );
-
-        return json({
-          token,
-          karigar: {
-            id: karigar.id,
-            name: karigar.name,
-            phone: karigar.phone,
-            login_id: karigar.login_id,
-            whatsapp: karigar.whatsapp || "",
-            area: karigar.area || "",
-            photo_url: karigar.photo_url || "",
-            skills: karigar.skills || [],
-            experience_years:
-              karigar.experience_years || 0,
-            description:
-              karigar.description || "",
-            availability:
-              karigar.availability || "available"
-          }
-        });
-      }
-
-
       /* ================= CREATE PRODUCT ================= */
 
       if (
@@ -513,26 +419,7 @@ export default {
       }
 
 
-
-      /* ================= KARIGAR PROFILE ================= */
-
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/karigar/me"
-      ) {
-        const user = await requireAuth(request, env);
-
-        if (user.role !== "karigar") {
-          return json({ error: "Access denied" }, 403);
-        }
-
-        const rows = await db.findKarigarByLoginId(env, user.login_id);
-        const karigar = rows?.[0];
-
-        return json(karigar || {});
-      }
-
-/* ================= KARIGAR API ================= */
+      /* ================= KARIGAR API ================= */
 
       if (
         request.method === "GET" &&
@@ -559,45 +446,15 @@ export default {
 
         const name = String(body.name || "").trim();
         const phone = String(body.phone || "").trim();
-        const loginId = String(body.login_id || "").trim();
-        const password = String(body.password || "");
 
-        if (!name || !phone || !loginId || !password) {
+        if (!name || !phone) {
           return json(
             {
-              error: "Name, phone, Login ID and password required"
+              error: "Name and phone required"
             },
             400
           );
         }
-
-        if (password.length < 6) {
-          return json(
-            {
-              error: "Password must be at least 6 characters"
-            },
-            400
-          );
-        }
-
-        const existing = await db.findKarigarByLoginId(
-          env,
-          loginId
-        );
-
-        if (existing?.length) {
-          return json(
-            {
-              error: "Login ID already exists"
-            },
-            409
-          );
-        }
-
-        const passwordHash = await bcrypt.hash(
-          password,
-          10
-        );
 
         const skills = Array.isArray(body.skills)
           ? body.skills
@@ -623,9 +480,7 @@ export default {
               body.availability
             )
               ? body.availability
-              : "available",
-          login_id: loginId,
-          password_hash: passwordHash
+              : "available"
         };
 
         const created =
@@ -693,47 +548,6 @@ export default {
               error: "Name and phone required"
             },
             400
-          );
-        }
-
-        const loginId = String(body.login_id || "").trim();
-        const password = String(body.password || "");
-
-        if (loginId) {
-          const existing = await db.findKarigarByLoginId(
-            env,
-            loginId
-          );
-
-          const another = existing?.find(
-            (item) => String(item.id) !== String(id)
-          );
-
-          if (another) {
-            return json(
-              {
-                error: "Login ID already exists"
-              },
-              409
-            );
-          }
-
-          karigar.login_id = loginId;
-        }
-
-        if (password) {
-          if (password.length < 6) {
-            return json(
-              {
-                error: "Password must be at least 6 characters"
-              },
-              400
-            );
-          }
-
-          karigar.password_hash = await bcrypt.hash(
-            password,
-            10
           );
         }
 

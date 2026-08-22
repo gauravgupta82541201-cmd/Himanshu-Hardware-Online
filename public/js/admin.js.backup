@@ -246,11 +246,6 @@ function openKarigarModal(karigar = null) {
   $("karigarWhatsapp").value =
     karigar?.whatsapp || "";
 
-  $("karigarLoginId").value =
-    karigar?.login_id || "";
-
-  $("karigarPassword").value = "";
-
   $("karigarArea").value =
     karigar?.area || "";
 
@@ -304,24 +299,9 @@ async function saveKarigar(event) {
       .map((skill) => skill.trim())
       .filter(Boolean) || [];
 
-  const loginId =
-    $("karigarLoginId")?.value.trim();
-
-  const password =
-    $("karigarPassword")?.value || "";
-
-  if (!id && (!loginId || !password)) {
-    toast("New Karigar ke liye Login ID aur Password required");
-    return;
-  }
-
   const body = {
     name,
     phone,
-
-    login_id: loginId,
-
-    ...(password ? { password } : {}),
 
     whatsapp:
       $("karigarWhatsapp")?.value.trim() || "",

@@ -559,45 +559,15 @@ export default {
 
         const name = String(body.name || "").trim();
         const phone = String(body.phone || "").trim();
-        const loginId = String(body.login_id || "").trim();
-        const password = String(body.password || "");
 
-        if (!name || !phone || !loginId || !password) {
+        if (!name || !phone) {
           return json(
             {
-              error: "Name, phone, Login ID and password required"
+              error: "Name and phone required"
             },
             400
           );
         }
-
-        if (password.length < 6) {
-          return json(
-            {
-              error: "Password must be at least 6 characters"
-            },
-            400
-          );
-        }
-
-        const existing = await db.findKarigarByLoginId(
-          env,
-          loginId
-        );
-
-        if (existing?.length) {
-          return json(
-            {
-              error: "Login ID already exists"
-            },
-            409
-          );
-        }
-
-        const passwordHash = await bcrypt.hash(
-          password,
-          10
-        );
 
         const skills = Array.isArray(body.skills)
           ? body.skills
@@ -623,9 +593,7 @@ export default {
               body.availability
             )
               ? body.availability
-              : "available",
-          login_id: loginId,
-          password_hash: passwordHash
+              : "available"
         };
 
         const created =
@@ -693,47 +661,6 @@ export default {
               error: "Name and phone required"
             },
             400
-          );
-        }
-
-        const loginId = String(body.login_id || "").trim();
-        const password = String(body.password || "");
-
-        if (loginId) {
-          const existing = await db.findKarigarByLoginId(
-            env,
-            loginId
-          );
-
-          const another = existing?.find(
-            (item) => String(item.id) !== String(id)
-          );
-
-          if (another) {
-            return json(
-              {
-                error: "Login ID already exists"
-              },
-              409
-            );
-          }
-
-          karigar.login_id = loginId;
-        }
-
-        if (password) {
-          if (password.length < 6) {
-            return json(
-              {
-                error: "Password must be at least 6 characters"
-              },
-              400
-            );
-          }
-
-          karigar.password_hash = await bcrypt.hash(
-            password,
-            10
           );
         }
 
